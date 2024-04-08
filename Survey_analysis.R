@@ -5,6 +5,12 @@
 
 survey<-read.table("Survey_modified_28032024.csv",sep = ",",h=T,na.strings = "")
 
+# Average questions
+apply(X = survey[,8:69],MARGIN = 2,FUN = mean,na.rm=T)
+apply(X = survey[,8:69],MARGIN = 2,FUN = table)
+
+
+
 hist(survey$salary[which(survey$gender == "Woman")],breaks = 20,col=rgb(0,1,0,.5),
      xlim=c(20000,50000),main = "Green, Women, Purple, men; Others not shown (too few)",
      xlab="Monthly salary (sek)")
