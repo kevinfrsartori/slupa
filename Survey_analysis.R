@@ -3,6 +3,10 @@
 # 28-03-2024
 ####
 
+# next time, ask PhD defence date
+# In what year of postdoc are you
+# Ask salary AFTER taxe, for being comparable to stipend
+
 survey<-read.table("Survey_modified_28032024.csv",sep = ",",h=T,na.strings = "")
 
 # Average questions
@@ -26,7 +30,7 @@ library(MASS)
 
 gender<-survey[which(survey$gender %in% c("Man","Woman")),c(3,8:69)]
 lda_g<-lda(gender ~., gender)
-
+lda_g$mean
 
 plot(lda_g, col = as.integer(gender$gender))
 
