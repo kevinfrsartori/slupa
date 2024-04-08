@@ -59,6 +59,43 @@ incorrects<-dim(gender)[1]-(corrects+missings)
 
 corrects/(corrects+incorrects)
 
+lda_g<-lda(gender ~., gender)
+ld1_g<-predict(lda_g,gender)$x
+ld1_g_cor<-cor(x = gender[,-1],y = ld1_g,use = "pairwise.complete.obs",method = "pearson")
+rownames(ld1_g_cor)[order(ld1_g_cor)]
+
+# By increasing correlation with ld1:
+
+#III12 I am involved in decisions that affect me in my own area of work
+lda_g$means[,"III12"]
+#Man    Woman 
+#3.975000 3.509434 
+
+#III19 I often feel excessive levels of stress at work
+lda_g$means[,"III19"]
+#Man   Woman 
+#2.57500 3.09434 
+
+#C6 felt capable of making decisions about things? 2 Same as usual; 3 Less so than usual
+lda_g$means[,"C6"]
+#Man    Woman 
+#2.025000 2.339623 
+
+#B2 had difficulty in staying asleep once you are off? 1 Not at all; 2 No more than usual; 3 Rather more than usual;
+lda_g$means[,"B2"]
+#Man    Woman 
+#1.725000 2.188679 
+
+#A7 been having hot or cold spells? 1 Not at all; 2 No more than usual; 3 Rather more than usual;
+lda_g$means[,"A7"]
+#Man    Woman 
+#1.375000 1.811321
+
+#A5 been getting any pains in your head? 1 Not at all; 2 No more than usual; 3 Rather more than usual;
+lda_g$means[,"A5"]
+#Man    Woman 
+#1.600000 2.037736 
+
 
 # predict contract
 pos<-na.omit(survey[,c(4,8:69)])
@@ -78,7 +115,43 @@ missings<-length(which(is.na(res$predicted)))
 incorrects<-dim(gender)[1]-(corrects+missings)
 corrects/(corrects+incorrects)
 
+lda_p<-lda(position ~., pos)
+ld1_p<-predict(lda_p,pos)$x
+ld1_p_cor<-cor(x = pos[,-1],y = ld1_p,use = "pairwise.complete.obs",method = "pearson")
 
+# ld1
+ld1_p_cor[,1][order(ld1_p_cor[,1])]
+rownames(ld1_p_cor)[order(ld1_p_cor[,1])]
+
+#III21 Recently, I have been feeling reasonably happy all things considered
+round(sort(lda_p$means[,"III21"]),2)
+#stipend forskare  postdoc 
+#2.94     3.06     3.44
+
+#III8 When I have done a good job it is acknowledged by my line manager
+round(sort(lda_p$means[,"III8"]),2)
+#postdoc forskare  stipend 
+#3.70     3.83     4.31 
+
+
+#ld2
+ld1_p_cor[,2][order(ld1_p_cor[,2])]
+rownames(ld1_p_cor)[order(ld1_p_cor[,2])]
+
+#IV5 Thanks to my resourcefulness, I know how to handle unforeseen situations.
+round(sort(lda_p$means[,"IV5"]),2)
+#forskare  postdoc  stipend 
+#2.83     3.29     3.31 
+
+#A6 been getting a feeling of tightness or pressure in your head?
+round(sort(lda_p$means[,"A6"]),2)
+#forskare  postdoc  stipend 
+#1.67     2.14     2.25 
+
+#D4
+round(sort(lda_p$means[,"D4"]),2)
+#forskare  postdoc  stipend 
+#1.11     1.30     1.75 
 
 
 library(klaR)
