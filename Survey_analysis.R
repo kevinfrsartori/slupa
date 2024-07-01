@@ -2,8 +2,12 @@
 # first analysis of SLUPA survey
 # 28-03-2024
 ####
-
-survey<-read.table("Survey_modified_28032024.csv",sep = ",",h=T,na.strings = "")
+library(here)
+library(tidyverse)
+library(ggeffects)
+survey<-read.table(here("Survey_modified_28032024.csv"),sep = ",",h=T,na.strings = "") %>% 
+  mutate(gender_position = as_factor(paste0(gender, '_', position)),
+         l10salary = log10(salary))
 
 
 # next time, ask PhD defence date
@@ -11,13 +15,34 @@ survey<-read.table("Survey_modified_28032024.csv",sep = ",",h=T,na.strings = "")
 # Ask salary AFTER taxe, for being comparable to stipend
 
 # Salary predictors
-
+hist((survey$salary))
 hist(survey$salary[which(survey$gender == "Woman")],breaks = 20,col=rgb(0,1,0,.5),
      xlim=c(20000,50000),main = "Green, Women, Purple, men; Others not shown (too few)",
      xlab="Monthly salary (sek)")
 hist(survey$salary[which(survey$gender == "Man")],breaks = 20,col=rgb(.2,0,1,.5),add=T)
 boxplot(survey$salary~survey$position, ylab="Monthly salary (sek)", xlab="Position type", las=1)
-summary(lm(salary ~ BD + gender + position + started + arrived, data = survey))
+initial.mod = lm(salary ~ BD + gender + position + started + arrived, data = survey)
+second.mod = lm(salary ~ BD + gender_position + started + arrived, data = survey)
+MuMIn::AICc(initial.mod, second.mod)
+summary(initial.mod)
+summary(second.mod)
+#ok let's use the first model then
+figuredifferenceSalary  = initial.mod %>% 
+  ggpredict(terms=c("position")) %>% 
+  ggplot(aes(x = x,
+             y = predicted, col = x))+
+  geom_point(size = 3)+
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high), width=.0,
+                             position=position_dodge(0.05), linewidth =1)+
+  xlab('')+
+  ylab('Salary')+
+  coord_flip()+
+  ggsci::scale_color_jco()+
+  ggsci::scale_fill_jco()+
+  ggpubr::theme_pubclean()+
+  theme(legend.position = 'none')
+figuredifferenceSalary
+cowplot::save_plot('figure/figuredifferenceSalary.png', figuredifferenceSalary, ncol = 1, nrow = .8)
 
 # Average responses
 ## II - General health questionnaire
@@ -34,7 +59,67 @@ segments(x0 = 35,y0 = -4,x1 = 35,y1 = -6, lwd = 2)
 segments(x0 = 25,y0 = -5,x1 = 35,y1 = -5, lwd = 1,lty = 2)
 text(35,-5,"Worldwide mean and sd", pos= 4)
 
+#alternative plot 
+quality = apply(X = survey[,36:69],MARGIN = 2,FUN = table)$III24 %>% as.data.frame() %>% 
+  mutate(percentage = Freq*100/124)
+
+workquality = ggplot(quality, aes(x = "", y = percentage, fill = factor(Var1))) +
+  geom_bar(stat = "identity", width = 1) +
+  geom_text(aes(label = paste0(round(percentage, 1), "%")), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  scale_fill_manual(values = c("#A6611A" , "#DFC27D" , "#F5F5F5",  "#80CDC1" , "#018571"),
+                    labels = c("1 (Very good)", "2", "3 (Medium)", "4", "5 (Very bad)")) +
+  labs(title = "Working life satisfaction",
+       x = "",
+       y = "Percentage (%)") +
+  theme_minimal() +
+  theme(legend.title = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())+
+  coord_flip()+
+  scale_y_reverse()+
+  theme_void()+
+  theme(legend.title = element_blank())
+workquality
+cowplot::save_plot('figure/workquality.png', workquality, ncol = 2, nrow = .8, bg = "white")
+#i think for label here, would be better to do it on ppt 
+
+dataDsector = survey[,29:35] %>% 
+  pivot_longer(D1:D7) %>% 
+  drop_na() %>% 
+  group_by(name, value) %>%
+  summarize(count = n()) %>%
+  mutate(percentage = count / sum(count) * 100) %>% 
+  mutate(name = recode(name , "D1"= "been thinking of yourself as a worthless person?", 
+                       "D2" = "felt that life is entirely hopeless?",
+                       "D3" = "felt that life isn’t worth living?",
+                       'D4' = 'thought of the possibility that you might make away with yourself?',
+                       'D5' = 'found at times you couldn’t do anything because your nerves were too bad?',
+                       'D6' = 'found yourself wishing you were dead and away from it all?',
+                       'D7' = 'found that the idea of taking your own life kept coming into your mind?'))
+
+  
+
+dresponse = ggplot(dataDsector, aes(x = "", y = percentage, fill = factor(value))) +
+  geom_bar(stat = "identity", width = 1) +
+  facet_grid(name~.)+
+  geom_text(aes(label = paste0(round(percentage, 1), "%")), 
+            position = position_stack(vjust = 0.5), size = 5) +
+  scale_fill_manual(values = c("#A6611A" , "#DFC27D",  "#80CDC1" , "#018571"),
+                    labels = c("1 (Not at all)", "2", '3', "4 (Much more than usual)"))+
+  theme_minimal() +
+  theme(legend.title = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank())+
+  coord_flip()+
+  scale_y_reverse(labels = scales::label_wrap(10))+
+  #scale_y_discrete() +
+  theme_void()+
+  theme(legend.title = element_blank(),
+        legend.position = 'bottom',
+        axis.text = element_text(size = 15))
+dresponse
+cowplot::save_plot('figure/Dresponse.png', dresponse, ncol = 3, nrow = 3, bg = "white")
+
+
 # Discriminant analysis
+
 
 # A simple PCA reveals the trends
 pca<-FactoMineR::PCA(survey[,3:69],quali.sup = c(1,2),quanti.sup = c(3,4,5))
@@ -159,3 +244,4 @@ library(psych)
 library(MASS)
 library(ggord)
 library(devtools)
+
