@@ -68,8 +68,8 @@ workquality = ggplot(quality, aes(x = "", y = percentage, fill = factor(Var1))) 
   geom_text(aes(label = paste0(round(percentage, 1), "%")), 
             position = position_stack(vjust = 0.5), size = 5) +
   scale_fill_manual(values = c("#A6611A" , "#DFC27D" , "#F5F5F5",  "#80CDC1" , "#018571"),
-                    labels = c("1 (Very good)", "2", "3 (Medium)", "4", "5 (Very bad)")) +
-  labs(title = "Working life satisfaction",
+                    labels = c("1 (strongly disagree)", "2 (disagree)", "3 (Neutral)", "4 (Agree)", "5 (Strongly agree)")) +
+  labs(title = " I am satisfied with the overall quality of my working life",
        x = "",
        y = "Percentage (%)") +
   theme_minimal() +
